@@ -2,7 +2,6 @@
 
 namespace Drupal\commerce_instamojo\PluginForm\OffsiteRedirect;
 
-use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -14,26 +13,37 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Instamojo\Instamojo;
 
+/**
+ * Class PaymentOffsiteForm.
+ *
+ * @package Drupal\commerce_instamojo\PluginForm\OffsiteRedirect
+ */
 class PaymentOffsiteForm extends BasePaymentOffsiteForm implements ContainerInjectionInterface {
 
   const INSTAMOJO_TEST_API_URL = 'https://test.instamojo.com/api/1.1/';
   const INSTAMOJO_LIVE_API_URL = 'https://www.instamojo.com/api/1.1/payment-requests/';
 
   /**
-   * @var [type]
+   * Stores runtime messages sent out to individual users on the page.
+   *
+   * @var Drupal\Core\Messenger\MessengerInterface
    */
   protected $messenger;
 
   /**
-   * @var [type]
+   * Logger channel interface.
+   *
+   * @var Drupal\Core\Logger\LoggerChannelInterface
    */
   protected $logger;
 
   /**
    * PaymentOffsiteForm constructor.
    *
-   * @param MessengerInterface $messenger
-   * @param LoggerChannelInterface $logger
+   * @param Drupal\Core\Messenger\MessengerInterface $messenger
+   *   Stores runtime messages sent out to individual users on the page.
+   * @param Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger channel interface.
    */
   public function __construct(MessengerInterface $messenger, LoggerChannelInterface $logger) {
     $this->messenger = $messenger;
@@ -79,19 +89,16 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm implements ContainerInje
           "send_email" => $config['send_email'],
           "allow_repeated_payments" => $config['allow_repeated_payments'],
           "email" => $order->getEmail(),
-          "redirect_url" => Url::FromRoute('commerce_payment.checkout.return', ['commerce_order' => $order_id, 'step' => 'payment'], ['absolute' => TRUE])->toString()
+          "redirect_url" => Url::FromRoute('commerce_payment.checkout.return', ['commerce_order' => $order_id, 'step' => 'payment'], ['absolute' => TRUE])->toString(),
         ]
       );
 
       $response = new RedirectResponse($payload['longurl']);
       $response->send();
-      return[];
+      return [];
     }
     catch (InvalidValueException $e) {
-      $this->messenger->addError($e->getMessage());
-      if ($config['watchdog_log']) {
-        $this->logger->error($e->getMessage());
-      }
+      $this->logger->error($e->getMessage());
     }
     catch (\Exception $e) {
       $this->messenger->addError('Unexpected error. Please contact store administration if the problem persists.');
@@ -104,7 +111,10 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm implements ContainerInje
   }
 
   /**
+   * Returns configuration data.
+   *
    * @return array
+   *   Configuration array.
    */
   private function getConfiguration() {
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
@@ -114,4 +124,5 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm implements ContainerInje
     $payment_gateway_plugin = $payment->getPaymentGateway()->getPlugin();
     return $payment_gateway_plugin->getConfiguration();
   }
+
 }

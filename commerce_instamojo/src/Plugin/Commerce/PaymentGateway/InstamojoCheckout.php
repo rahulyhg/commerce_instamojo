@@ -6,8 +6,6 @@ use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGateway
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\commerce_payment\Entity\PaymentInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Instamojo\Instamojo;
 
@@ -33,14 +31,14 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
    */
   public function defaultConfiguration() {
     return [
-        'api_key' => '',
-        'auth_token' => '',
-        'salt' => '',
-        'order_prefix' => '',
-        'send_email' => FALSE,
-        'allow_repeated_payments' => TRUE,
-        'watchdog_log' => FALSE,
-      ] + parent::defaultConfiguration();
+      'api_key' => '',
+      'auth_token' => '',
+      'salt' => '',
+      'order_prefix' => '',
+      'send_email' => FALSE,
+      'allow_repeated_payments' => TRUE,
+      'watchdog_log' => FALSE,
+    ] + parent::defaultConfiguration();
   }
 
   /**
@@ -49,7 +47,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    // API Key
+    // API Key.
     $form['api_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Private API Key'),
@@ -58,7 +56,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#required' => TRUE,
     ];
 
-    // Auth Token
+    // Auth Token.
     $form['auth_token'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Private Auth Token'),
@@ -67,7 +65,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#required' => TRUE,
     ];
 
-    // Salt
+    // Salt.
     $form['salt'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Private Salt'),
@@ -76,7 +74,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#required' => TRUE,
     ];
 
-    // Order Prefix
+    // Order Prefix.
     $form['order_prefix'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Order ID prefix'),
@@ -84,7 +82,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#default_value' => $this->configuration['order_prefix'],
     ];
 
-    // Send Mail
+    // Send Mail.
     $form['send_email'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send Email'),
@@ -92,7 +90,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#default_value' => $this->configuration['send_email'],
     ];
 
-    // Allow Repeated Payments
+    // Allow Repeated Payments.
     $form['allow_repeated_payments'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow Repeated Payments'),
@@ -100,7 +98,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       '#default_value' => $this->configuration['allow_repeated_payments'],
     ];
 
-    // Watchdog Log
+    // Watchdog Log.
     $form['watchdog_log'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable Watchdog Log'),
@@ -157,11 +155,12 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
       $payment->save();
 
       $messenger = \Drupal::messenger();
-      $messenger->addMessage('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id',
-        [
-          '@orderid' => $order->id(),
-          '@transaction_id' => $payment_request_id
-        ],
+      $messenger->addMessage($this->t('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id',
+          [
+            '@orderid' => $order->id(),
+            '@transaction_id' => $payment_request_id,
+          ]
+        ),
         $messenger::TYPE_STATUS
       );
       if ($config['watchdog_log']) {
@@ -169,7 +168,7 @@ class InstamojoCheckout extends OffsitePaymentGatewayBase {
           ->info('Your payment was successful with Order id : @orderid and Transaction id : @transaction_id',
             [
               '@orderid' => $order->id(),
-              '@transaction_id' => $payment_request_id
+              '@transaction_id' => $payment_request_id,
             ]
           );
       }
